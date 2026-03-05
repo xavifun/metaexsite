@@ -10,11 +10,11 @@ export function Footer() {
         <div>
           <div className="flex justify-center md:justify-start items-center space-x-2">
             <img 
-              src="https://metaextec.com/wp-content/uploads/2025/01/metaextech_dp.png" 
-              alt="MetaExTechnology" 
+              src="/metaextec.webp" 
+              alt="Metaex Technology Services Private Limited" 
               className="h-8 w-auto"
             />
-            <span className="text-xl font-bold">MetaEdge Technology</span>
+            <span className="text-xl font-bold">Metaex Technology Services Private Limited</span>
           </div>
           <p className="mt-4 text-gray-300">
             Transforming ideas into digital reality with cutting-edge technology.
@@ -26,9 +26,12 @@ export function Footer() {
           <div className="space-y-2">
             <Link href="#home" className="block text-white hover:text-gray-300">Home</Link>
             <Link href="#cases" className="block text-white hover:text-gray-300">Cases</Link>
-            <Link href="#about" className="block text-white hover:text-gray-300">About</Link>
+            <Link href="#about_us" className="block text-white hover:text-gray-300">About</Link>
             <Link href="/blog" className="block text-white hover:text-gray-300">Blog</Link>
-            <Link href="#contact" className="block text-white hover:text-gray-300">Contact us</Link>
+            <Link href="#contact_us" className="block text-white hover:text-gray-300">Contact us</Link>
+            <Link href="/privacy-policy" className="block text-white hover:text-gray-300">Privacy Policy</Link>
+            <Link href="/terms-and-conditions" className="block text-white hover:text-gray-300">Terms &amp; Conditions</Link>
+            <Link href="/refund-policy" className="block text-white hover:text-gray-300">Refund &amp; Cancellation Policy</Link>
           </div>
         </div>
   
@@ -41,12 +44,13 @@ export function Footer() {
             </a>
             <a href="tel:+1234567890" className="flex justify-center md:justify-start items-center space-x-2 text-gray-300 hover:text-white">
               <Phone size={18} />
-              <span>+91-99999-99999</span>
+              <span>+91-73382-08303</span>
             </a>
             <div className="flex justify-center md:justify-start items-center space-x-2 text-gray-300">
               <MapPin size={18} />
-              <span>#2117, Prestige Royale Gardens, 
-                <br />Bangalore - 560 064, 
+              <span>Metaex Technology Services Private Limited,
+                <br />#2117, Prestige Royale Gardens,
+                <br />Bangalore - 560 064,
                 <br />Karnataka, India</span>
             </div>
           </div>
@@ -70,7 +74,7 @@ export function Footer() {
   
       <div className="mt-12 pt-8 border-t border-gray-700">
         <p className="text-center text-gray-300">
-          © {new Date().getFullYear()} MetaEdge Technology. All rights reserved.
+          © {new Date().getFullYear()} Metaex Technology Services Private Limited. All rights reserved.
         </p>
       </div>
     </div>

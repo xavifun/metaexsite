@@ -18,7 +18,7 @@ export function Header() {
         <div className="flex items-center">
           <a href="/">
             <img 
-              src="https://metaextec.com/wp-content/uploads/2025/01/metaextech_dp.png"
+              src="/metaextec.webp"
               alt="MET"
               className="h-12 w-auto"
             />
@@ -50,7 +50,7 @@ export function Header() {
       {isMenuOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {['Cases', 'aboutus', 'Contactus'].map((item) => (
+            {['Cases', 'About us', 'Contact us'].map((item) => (
               <a
                 key={item}
                 href={`#${item.toLowerCase().replace(/ /g, '_')}`}

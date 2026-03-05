@@ -9,7 +9,7 @@ export function Hero() {
         <h1 className="text-6xl font-bold flex flex-wrap items-center leading-relaxed">
           <span>Have you</span>
           <img 
-            src="https://i0.wp.com/metaextec.com/wp-content/uploads/2024/08/metaextech.png?resize=1536%2C404&ssl=1"
+            src="/metaextec.webp"
             alt="met"
             className="h-[0.9em] mx-2 inline-block"
           />
@@ -21,7 +21,7 @@ export function Hero() {
           </div>
           <div className="mt-10">
             <a
-              href="/contact"
+              href="#contact_us"
               className="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-accent hover:bg-accent/90 transition-colors duration-200"
             >
               Let's work together →

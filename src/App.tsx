@@ -5,6 +5,9 @@ import { Cases } from './components/Cases';
 import { About } from './components/About';
 import { Contact } from './components/Contact';
 import { BlogPost } from './components/BlogPost';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { TermsAndConditions } from './components/TermsAndConditions';
+import { RefundPolicy } from './components/RefundPolicy';
 import { Footer } from './components/Footer';
 import { BackToTop } from './components/BackToTop';
 
@@ -12,12 +15,20 @@ function App() {
   // Simple route handling
   const path = window.location.pathname;
 
+  const renderPage = () => {
+    if (path === '/blog') return <BlogPost />;
+    if (path === '/privacy-policy') return <PrivacyPolicy />;
+    if (path === '/terms-and-conditions') return <TermsAndConditions />;
+    if (path === '/refund-policy') return <RefundPolicy />;
+    return null;
+  };
+
   return (
     <div className="min-h-screen flex flex-col scroll-smooth">
       <Header />
       <main className="flex-grow">
-        {path === '/blog' ? (
-          <BlogPost />
+        {renderPage() !== null ? (
+          renderPage()
         ) : (
           <>
             <section id="home">

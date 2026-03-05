@@ -83,7 +83,7 @@ export function Contact() {
                 <h3 className="text-xl font-semibold text-secondary">Talk to us</h3>
               </div>
               <p className="text-gray-600">
-                Call us Mon-Fri between 9 am to 6 pm at +91-99999-99999
+                Call us Mon-Fri between 9 am to 6 pm at +91-73382-08303
               </p>
             </div>
             
@@ -93,7 +93,7 @@ export function Contact() {
                 <h3 className="text-xl font-semibold text-secondary">Visit us</h3>
               </div>
               <p className="text-gray-600">
-                Drop by for a coffee with us at 2117, Prestige Royale Gardens, Bangalore - 560 064, India.
+                Drop by for a coffee with us at Metaex Technology Services Private Limited, #2117, Prestige Royale Gardens, Bangalore - 560 064, Karnataka, India.
               </p>
             </div>
           </div>
