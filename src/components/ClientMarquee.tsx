@@ -4,7 +4,7 @@ export function ClientMarquee() {
   const clients = [
     {
       name: "Hridayalaya",
-      logo: "https://i0.wp.com/metaextec.com/wp-content/uploads/2024/08/hharc.png"
+      logo: "/clients/hridayalaya.webp"
     },
     // {
     //   name: "Avsar",
@@ -12,7 +12,7 @@ export function ClientMarquee() {
     // },
     {
       name: "AT Park Study",
-      logo: "https://i0.wp.com/metaextec.com/wp-content/uploads/2024/08/atpartk-study-logo-1.png?w=1411&ssl=1"
+      logo: "/clients/atpark.webp"
     },
     {
       name: "Greenikk",
@@ -20,7 +20,7 @@ export function ClientMarquee() {
     },
     {
       name: "Presidency University",
-      logo: "https://i0.wp.com/metaextec.com/wp-content/uploads/2024/08/Presidency_University_Bangalore_logo.png?w=1200&ssl=1"
+      logo: "/clients/presidency.svg"
     },
   ];
 
