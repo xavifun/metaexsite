@@ -98,15 +98,20 @@ jobs:
           sudo -n nginx -t && sudo -n systemctl reload nginx
 
           # ---- Health check (Nginx serves the metaextec.com vhost) ----
+          # Once Certbot's --redirect is in place, http returns 301 -> https (that
+          # is healthy, not a failure). Prefer validating the real 200 over TLS
+          # (SNI via --resolve so the metaextec.com cert matches); fall back to the
+          # http status (200 before the cert exists, or 301/308 after the redirect).
           echo "Checking site via Nginx..."
           for i in \$(seq 1 5); do
             sleep 1
-            CODE=\$(curl -sS -o /dev/null -w "%{http_code}" --max-time 5 -H "Host: metaextec.com" http://127.0.0.1/ || echo 000)
-            if [ "\$CODE" = "200" ]; then
-              echo "Site healthy (HTTP \$CODE)"; break
+            CODE_HTTPS=\$(curl -sS -o /dev/null -w "%{http_code}" --max-time 5 --resolve metaextec.com:443:127.0.0.1 https://metaextec.com/ 2>/dev/null || echo 000)
+            CODE_HTTP=\$(curl -sS -o /dev/null -w "%{http_code}" --max-time 5 -H "Host: metaextec.com" http://127.0.0.1/ || echo 000)
+            if [ "\$CODE_HTTPS" = "200" ] || [ "\$CODE_HTTP" = "200" ] || [ "\$CODE_HTTP" = "301" ] || [ "\$CODE_HTTP" = "308" ]; then
+              echo "Site healthy (https=\$CODE_HTTPS http=\$CODE_HTTP)"; break
             fi
             if [ "\$i" = "5" ]; then
-              echo "ERROR: site not healthy via Nginx (last HTTP \$CODE)" >&2
+              echo "ERROR: site not healthy via Nginx (https=\$CODE_HTTPS http=\$CODE_HTTP)" >&2
               exit 1
             fi
           done
