@@ -3,7 +3,12 @@ import { Shield } from 'lucide-react';
 
 export function About() {
   return (
-    <section className="py-12 bg-white bg-opacity-90"  style={{ backgroundImage: 'url(https://metaextec.com/wp-content/uploads/2025/01/bg-scaled.webp)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay'}}>      
+    <section className="py-12 bg-white bg-opacity-90">
+      {/* Background image previously loaded from metaextec.com/wp-content (now 404
+          after the migration off WordPress/S3). Removed to avoid a dead cross-origin
+          request. To restore a background, drop an image at public/bg-scaled.webp and
+          re-add: style={{ backgroundImage: 'url(/bg-scaled.webp)', backgroundSize:
+          'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay' }} */}
       <div className="max-w-8xl mx-auto px-8 md:px=16 lg:px-16">
           <div className="flex items-center py-12">
             <Shield className="w-12 h-12 text-accent mr-4" />

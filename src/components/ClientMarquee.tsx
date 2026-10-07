@@ -16,7 +16,7 @@ export function ClientMarquee() {
     },
     {
       name: "Greenikk",
-      logo: "https://i0.wp.com/metaextec.com/wp-content/uploads/2024/08/greenikk-1.png?w=200&ssl=1"
+      logo: "/clients/greenikk.png"
     },
     {
       name: "Presidency University",

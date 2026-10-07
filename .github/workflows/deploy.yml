@@ -1,0 +1,148 @@
+name: Deploy metaextec website to GCP (frontend-server)
+
+# Static Vite/React site, built on the shared `frontend-server` VM and served
+# directly by Nginx from /opt/metaextec_site/dist (no PM2 — there is no server).
+#
+# Deploy model (mirrors the jobberdash/hive/skillnormer deploys): push ONE command
+# through the IAP tunnel; the VM `git fetch`es into its checkout and builds in
+# place. IAP only carries orchestration, never the payload.
+#
+# Required GitHub Actions secrets:
+#   GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_SERVICE_ACCOUNT, GCP_PROJECT_ID,
+#   GCE_ZONE, GCE_INSTANCE (= frontend-server)
+#
+# One-time prerequisites (see docs/gcp-hosting-guide.md):
+#   - /opt/metaextec_site is already a git checkout of this repo (NOT auto-cloned),
+#     owned by www-data.
+#   - Node on the VM; the metaextec.com Nginx vhost (root .../dist + try_files
+#     SPA fallback) and Certbot cert are set up.
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write   # required for Workload Identity Federation
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to GCP (Workload Identity Federation)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Install NumPy for IAP tunnel performance
+        run: |
+          # gcloud's IAP tunnel relay is pure-Python and stalls on transfer
+          # without NumPy. It must go into gcloud's OWN bundled interpreter
+          # (CLOUDSDK_PYTHON has no effect on the tunnel subprocess).
+          BUNDLED_PYTHON="$(gcloud info --format='value(installation.sdk_root)')/platform/bundledpythonunix/bin/python3"
+          "$BUNDLED_PYTHON" -m pip install numpy
+
+      - name: Deploy to frontend-server via IAP (git pull + build on remote)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          # Unquoted heredoc: ${VARS} expand here on the runner (token, repo),
+          # while \$VARS are escaped to run on the VM.
+          REMOTE_CMD=$(cat <<EOF
+          set -e
+          CHECKOUT=/opt/metaextec_site
+
+          # www-data's real home isn't writable by www-data on this VM, so point
+          # HOME at the (www-data-owned) checkout — npm caches under \$HOME.
+          RUN_WWW="sudo -u www-data env HOME=\$CHECKOUT"
+
+          cd "\$CHECKOUT"
+          if [ ! -d .git ]; then
+            echo "ERROR: \$CHECKOUT is not a git checkout yet. One-time bootstrap needed — see docs/gcp-hosting-guide.md." >&2
+            exit 1
+          fi
+
+          sudo -n git config --global --add safe.directory "\$CHECKOUT"
+
+          echo "Fetching latest main..."
+          sudo -n git fetch "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" main
+          sudo -n git reset --hard FETCH_HEAD
+          sudo -n chown -R www-data:www-data "\$CHECKOUT"
+
+          # ---- Dependencies (hash-gated on package-lock.json) ----
+          NEW_HASH=\$(md5sum package-lock.json | awk '{print \$1}')
+          OLD_HASH=\$(sudo -u www-data cat .npm_hash 2>/dev/null || echo '')
+          if [ "\$NEW_HASH" != "\$OLD_HASH" ]; then
+            \$RUN_WWW npm ci
+            echo "\$NEW_HASH" | sudo -u www-data tee .npm_hash > /dev/null
+            echo "Dependencies installed"
+          else
+            echo "package-lock.json unchanged, skipping npm ci"
+          fi
+
+          # ---- Build (Vite -> dist/, served directly by Nginx) ----
+          echo "Building site..."
+          sudo -u www-data rm -rf dist
+          \$RUN_WWW npm run build
+
+          # Nginx serves files live from dist/, so no restart is needed for content;
+          # reload only re-reads config and is a cheap safety check.
+          sudo -n nginx -t && sudo -n systemctl reload nginx
+
+          # ---- Health check (Nginx serves the metaextec.com vhost) ----
+          echo "Checking site via Nginx..."
+          for i in \$(seq 1 5); do
+            sleep 1
+            CODE=\$(curl -sS -o /dev/null -w "%{http_code}" --max-time 5 -H "Host: metaextec.com" http://127.0.0.1/ || echo 000)
+            if [ "\$CODE" = "200" ]; then
+              echo "Site healthy (HTTP \$CODE)"; break
+            fi
+            if [ "\$i" = "5" ]; then
+              echo "ERROR: site not healthy via Nginx (last HTTP \$CODE)" >&2
+              exit 1
+            fi
+          done
+
+          echo "metaextec deployment complete."
+          EOF
+          )
+
+          # 10-min cap per attempt; retried up to 3 times for transient IAP stalls.
+          attempt=0
+          until timeout 600 gcloud compute ssh "${{ secrets.GCE_INSTANCE }}" \
+            --tunnel-through-iap \
+            --zone="${{ secrets.GCE_ZONE }}" \
+            --project="${{ secrets.GCP_PROJECT_ID }}" \
+            --command="$REMOTE_CMD"
+          do
+            attempt=$((attempt + 1))
+            if [ "$attempt" -ge 3 ]; then
+              echo "Deploy failed after 3 attempts" >&2
+              exit 1
+            fi
+            echo "Deploy attempt $attempt timed out or failed (likely a transient IAP tunnel stall) — retrying in 15s..." >&2
+            sleep 15
+          done
+
+      - name: Summarize deploy failure
+        if: failure()
+        run: |
+          {
+            echo "### :x: metaextec deploy to frontend-server failed"
+            echo "The live site was **not** updated. See the \`Deploy to frontend-server via IAP\` step log above for the specific failure."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Diagnose target instance serial console output
+        if: failure()
+        run: |
+          gcloud compute instances get-serial-port-output "${{ secrets.GCE_INSTANCE }}" \
+            --zone="${{ secrets.GCE_ZONE }}" \
+            --project="${{ secrets.GCP_PROJECT_ID }}" | tail -100 || true
